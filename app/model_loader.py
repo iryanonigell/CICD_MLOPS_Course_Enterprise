@@ -1,10 +1,9 @@
-# app/model_loader.py
+#model_loader
+
 import os
 from functools import lru_cache
 from pathlib import Path
 import joblib
-
-from google.cloud import storage
 
 LOCAL_MODEL_PATH = Path(os.getenv("MODEL_PATH", "models/model.pkl"))
 GCS_MODEL_URI = os.getenv("GCS_MODEL_URI", "")  # contoh: gs://bucket/path/model.pkl
@@ -12,6 +11,12 @@ GCS_MODEL_URI = os.getenv("GCS_MODEL_URI", "")  # contoh: gs://bucket/path/model
 def _download_from_gcs(gcs_uri: str, local_path: Path):
     if not gcs_uri.startswith("gs://"):
         raise ValueError("GCS_MODEL_URI must start with gs://")
+
+    # lazy import supaya module tetap importable di environment tanpa google-cloud-storage
+    try:
+        from google.cloud import storage
+    except Exception as e:
+        raise RuntimeError("google-cloud-storage is required to download from GCS") from e
 
     _, path_part = gcs_uri.split("gs://", 1)
     bucket_name, blob_name = path_part.split("/", 1)

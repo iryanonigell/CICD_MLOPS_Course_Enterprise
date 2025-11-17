@@ -1,4 +1,5 @@
-# tests/test_app.py
+#test_app
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -20,6 +21,7 @@ def test_predict_endpoint(monkeypatch):
         def predict_proba(self, X):
             return [[0.1, 0.8, 0.1]]
 
+    # patch load_model to return our dummy model
     monkeypatch.setattr("app.main.load_model", lambda: DummyModel())
 
     payload = {"features": [1.0, 2.0, 3.0, 4.0]}

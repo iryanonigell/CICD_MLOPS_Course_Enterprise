@@ -1,4 +1,4 @@
-# ml/config.py
+#config.py
 from dataclasses import dataclass
 from pathlib import Path
 

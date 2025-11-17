@@ -1,22 +1,32 @@
-# app/main.py
+#main
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import numpy as np
-
-from .model_loader import load_model
+from typing import List
 
 app = FastAPI(title="Enterprise MLOps API", version="1.0.0")
 
 class PredictRequest(BaseModel):
-    features: list[float]
+    features: List[float]
 
 class PredictResponse(BaseModel):
     prediction: int
-    probabilities: list[float]
+    probabilities: List[float]
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+# define a module-level wrapper that lazily imports the real loader
+def load_model():
+    """
+    Lazy wrapper that imports the real load_model from app.model_loader
+    only when this function is called. This avoids import-time errors
+    (useful for tests that monkeypatch app.main.load_model).
+    """
+    from .model_loader import load_model as _real_load_model
+    return _real_load_model()
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest):
@@ -27,6 +37,12 @@ def predict(req: PredictRequest):
     model = load_model()
     X = np.array(req.features).reshape(1, -1)
     pred = model.predict(X)[0]
-    probs = model.predict_proba(X)[0].tolist()
+
+    # robust handling: model.predict_proba may return numpy arrays or plain lists
+    probs_raw = model.predict_proba(X)[0]
+    if hasattr(probs_raw, "tolist"):
+        probs = probs_raw.tolist()
+    else:
+        probs = list(probs_raw)
 
     return PredictResponse(prediction=int(pred), probabilities=probs)

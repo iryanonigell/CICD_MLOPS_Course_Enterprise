@@ -1,4 +1,5 @@
-# ml/train.py
+#train
+
 import json
 from pathlib import Path
 
@@ -12,15 +13,14 @@ from .config import config
 
 def train():
     config.model_dir.mkdir(parents=True, exist_ok=True)
-
     data = load_iris()
     X_train, X_test, y_train, y_test = train_test_split(
-        data.data,
-        data.target,
-        test_size=config.test_size,
-        random_state=config.random_state,
-        stratify=data.target,
-    )
+    data.data,
+    data.target,
+    test_size=config.test_size,
+    random_state=config.random_state,
+    stratify=data.target,
+)
 
     clf = RandomForestClassifier(
         n_estimators=config.n_estimators,
@@ -38,6 +38,7 @@ def train():
         "accuracy": acc,
         "n_estimators": config.n_estimators,
     }
+
     with open(config.metrics_path, "w") as f:
         json.dump(metrics, f)
 
